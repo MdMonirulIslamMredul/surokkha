@@ -31,6 +31,11 @@
 # php -- END cPanel-generated handler, do not edit
 
 /node_modules
-/.env
-/vendor
 node_modules
+/.env
+.env
+.env.backup
+.env.production
+/vendor
+/public/assets/plugins/tinymce/
+tinymce/
