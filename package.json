@@ -20,6 +20,7 @@
         "sass-loader": "^8.0.2"
     },
     "dependencies": {
+        "@ckeditor/ckeditor5-build-classic": "^44.3.0",
         "@fortawesome/fontawesome-free": "^6.1.1",
         "@hotwired/turbo": "^7.1.0",
         "@popperjs/core": "^2.9.2",
@@ -39,6 +40,7 @@
         "moment-round": "^1.0.1",
         "owl.carousel": "^2.3.4",
         "quill": "^1.3.7",
-        "smooth-scroll": "^16.1.3"
+        "smooth-scroll": "^16.1.3",
+        "tinymce": "^8.10.0"
     }
 }

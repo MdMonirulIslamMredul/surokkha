@@ -34,6 +34,7 @@
         "mews/purifier": "^3.4",
         "mhmiton/laravel-modules-livewire": "^2.3",
         "moneyphp/money": "^4.7",
+        "mpdf/mpdf": "*",
         "nwidart/laravel-modules": "^v10.0",
         "opcodesio/log-viewer": "^3.4",
         "openai-php/client": "^0.10.1",
