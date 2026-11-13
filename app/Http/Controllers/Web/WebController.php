@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\AppBaseController;
 use App\Models\AddCustomFields;
 use App\Models\Bed;
+use App\Models\ClinicDepartment;
 use App\Models\Doctor;
 use App\Models\DoctorDepartment;
 use App\Models\FrontService;
@@ -70,10 +71,11 @@ class WebController extends AppBaseController
         $doctors = Doctor::with('doctorUser')->get();
         $frontSetting = FrontSetting::whereType(FrontSetting::HOME_PAGE)->pluck('value', 'key')->toArray();
         $frontServices = FrontService::all()->take(8);
+        $clinicDepartments = ClinicDepartment::where('is_active', 1)->take(8)->get();
 
         return view('web.home.index',
             compact('doctorsDepartments', 'doctors', 'todayNotice', 'testimonials', 'totalbeds',
-                'totalDoctorNurses', 'totalPatient', 'doctorAppointments', 'frontSetting', 'frontServices'));
+                'totalDoctorNurses', 'totalPatient', 'doctorAppointments', 'frontSetting', 'frontServices', 'clinicDepartments'));
     }
 
     public function demo()
@@ -136,6 +138,26 @@ class WebController extends AppBaseController
         $frontServices = FrontService::paginate(8);
 
         return view('web.home.services', compact('frontServices'));
+    }
+
+    public function departments()
+    {
+        $clinicDepartments = ClinicDepartment::where('is_active', 1)->paginate(9);
+
+        return view('web.home.departments', compact('clinicDepartments'));
+    }
+
+    public function departmentDetails($slug)
+    {
+        $clinicDepartment = ClinicDepartment::where('slug', $slug)
+            ->orWhere('id', $slug)
+            ->firstOrFail();
+
+        $allDepartments = ClinicDepartment::where('is_active', 1)
+            ->where('id', '!=', $clinicDepartment->id)
+            ->get();
+
+        return view('web.home.department_details', compact('clinicDepartment', 'allDepartments'));
     }
 
     public function doctors()

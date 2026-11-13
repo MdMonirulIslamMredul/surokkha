@@ -28,6 +28,8 @@ use App\Http\Controllers\CaseHandlerController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChargeCategoryController;
 use App\Http\Controllers\ChargeController;
+use App\Http\Controllers\ClinicDepartmentController;
+use App\Http\Controllers\ClinicalDiagnosisController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\CurrencySettingController;
 use App\Http\Controllers\DeathReportController;
@@ -108,12 +110,15 @@ use App\Http\Controllers\PurchaseMedicineController;
 use App\Http\Controllers\RadiologyCategoryController;
 use App\Http\Controllers\RadiologyTestController;
 use App\Http\Controllers\ReceptionistController;
+use App\Http\Controllers\ReferralPayoutController;
+use App\Http\Controllers\ReferrerController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\TestimonialController;
+use App\Http\Controllers\TestServiceBillController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VaccinatedPatientController;
 use App\Http\Controllers\VaccinationController;
@@ -147,6 +152,8 @@ Route::middleware('setLanguage')->group(function () {
     Route::get('/appointment', [Web\WebController::class, 'appointment'])->name('appointment');
     Route::post('/appointment-form', [Web\WebController::class, 'appointmentFromOther'])->name('appointment.post');
     Route::get('/our-services', [Web\WebController::class, 'services'])->name('our-services');
+    Route::get('/our-departments', [Web\WebController::class, 'departments'])->name('our-departments');
+    Route::get('/department-details/{slug}', [Web\WebController::class, 'departmentDetails'])->name('department-details');
     Route::get('/our-doctors', [Web\WebController::class, 'doctors'])->name('our-doctors');
     Route::get('/terms-of-service', [Web\WebController::class, 'termsOfService'])->name('terms-of-service');
     Route::get('/privacy-policy', [Web\WebController::class, 'privacyPolicy'])->name('privacy-policy');
@@ -162,6 +169,10 @@ Route::post('/change-language', [Web\WebController::class, 'changeLanguage']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout.user');
 Route::get('/demo', [Web\WebController::class, 'demo'])->name('demo');
 Route::get('/modules-of-hms', [Web\WebController::class, 'modulesOfHms'])->name('modules-of-hms');
+
+// Public Referrer Registration
+Route::get('referrer-register', [ReferrerController::class, 'publicRegister'])->name('referrer.register');
+Route::post('referrer-register', [ReferrerController::class, 'publicStore'])->name('referrer.register.store');
 // Routes for Landing Page ends
 
 // Routes for Appointment
@@ -761,6 +772,8 @@ Route::middleware('auth', 'verified', 'xss', 'checkUserStatus')->group(function 
             ->middleware('modules');
         Route::get('prescriptions/{id}/view', [PrescriptionController::class, 'prescriptionsView']);
         Route::get('prescription-pdf/{id}', [PrescriptionController::class, 'convertToPDF'])->name('prescriptions.pdf');
+        Route::get('prescriptions-patient-vitals/{id}', [PrescriptionController::class, 'getPatientVitals'])->name('prescriptions.patient-vitals');
+        Route::get('prescriptions-blank-pad', [PrescriptionController::class, 'printBlankPad'])->name('prescriptions.blank-pad');
         Route::post('prescription-medicine', [PrescriptionController::class, 'prescreptionMedicineStore'])->name('prescription.medicine.store');
         Route::get('prescriptions-show-modal/{id}', [PrescriptionController::class, 'showModal'])->name('prescriptions.show.modal');
         Route::post('prescriptions/{prescription}/active-deactive', [PrescriptionController::class, 'activeDeactiveStatus']);
@@ -1146,6 +1159,14 @@ Route::middleware('auth', 'verified', 'xss', 'checkUserStatus')->group(function 
         Route::get('front-cms-services/{id}/edit', [FrontServiceController::class, 'edit'])->name('front.cms.services.edit');
         Route::post('front-cms-services/{id}', [FrontServiceController::class, 'update'])->name('front.cms.services.update');
         Route::delete('front-cms-services/{id}', [FrontServiceController::class, 'destroy'])->name('front.cms.services.destroy');
+
+        Route::resource('clinic-departments', ClinicDepartmentController::class);
+        Route::post('clinic-departments/{clinic_department}/active-deactive', [ClinicDepartmentController::class, 'activeDeActiveStatus'])->name('clinic-departments.activeDeactive');
+        Route::delete('clinic-departments/{clinic_department}/gallery/{media_id}', [ClinicDepartmentController::class, 'deleteGalleryImage'])->name('clinic-departments.deleteGalleryImage');
+
+        Route::resource('clinical-diagnoses', ClinicalDiagnosisController::class);
+        Route::post('clinical-diagnoses/{clinical_diagnosis}/active-deactive', [ClinicalDiagnosisController::class, 'activeDeActiveStatus'])->name('clinical-diagnoses.activeDeactive');
+        Route::get('get-clinical-diagnoses-json', [ClinicalDiagnosisController::class, 'getDiagnosesJson'])->name('clinical-diagnoses.json');
 
         Route::get('doctor-departments', [DoctorDepartmentController::class, 'index'])
             ->name('doctor-departments.index')
@@ -1586,6 +1607,29 @@ Route::middleware('auth', 'verified', 'xss', 'checkUserStatus')->group(function 
     Route::post('/add-on/{id}/update', [AddOnController::class, 'update'])->name('addon.update');
     Route::post('/addon-extract-zip', [AddOnController::class, 'extractZip'])->name('addOn.extractZip');
     Route::delete('add-on/{id}', [AddOnController::class, 'delete'])->name('addOn.destory');
+
+    // Test & Service Billing
+    Route::middleware('role:Admin|Receptionist|Accountant')->group(function () {
+        Route::resource('test-service-bills', TestServiceBillController::class);
+        Route::get('test-service-bills/{id}/pdf', [TestServiceBillController::class, 'printPdf'])->name('test-service-bills.pdf');
+        Route::get('test-service-bills-patient-details/{id}', [TestServiceBillController::class, 'getPatientDetails'])->name('test-service-bills.patient-details');
+    });
+
+    // Referrers Management
+    Route::middleware('role:Admin|Receptionist')->group(function () {
+        Route::resource('referrers', ReferrerController::class);
+    });
+
+    // Referral Payouts
+    Route::middleware('role:Admin|Accountant|Receptionist')->group(function () {
+        Route::resource('referral-payouts', ReferralPayoutController::class);
+        Route::get('referral-balance-details/{id}', [ReferralPayoutController::class, 'getBalance'])->name('referral-payouts.balance');
+    });
+
+    // Referrer Portal
+    Route::middleware('role:Referral')->group(function () {
+        Route::get('referrer/dashboard', [ReferrerController::class, 'dashboard'])->name('referrer.dashboard');
+    });
 });
 
 Route::get('hms-logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
