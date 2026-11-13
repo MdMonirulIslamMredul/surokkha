@@ -34,6 +34,13 @@
                             </li>
 
                             <li class="nav-item">
+                                <a class="nav-link {{ Request::is('our-departments*', 'department-details*') ? 'active' : '' }}"
+                                    href="{{ route('our-departments') }}">
+                                    Departments
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
                                 <a href="{{ route('our-doctors') }}"
                                     class="nav-link {{ Request::is('our-doctors', 'doctor-details*') ? 'active' : '' }}">{{ __('messages.web_home.doctors') }}</a>
                             </li>

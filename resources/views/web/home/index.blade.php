@@ -220,6 +220,50 @@
         </section>
         <!-- end service-section -->
 
+        <!-- start clinic-departments section -->
+        <section class="clinic-departments-section p-t-100 p-b-100">
+            <div class="container">
+                <div class="col-lg-7 text-center mx-auto mb-5">
+                    <h6 class="text-primary text-uppercase fw-bold mb-2">Our Specialized Care</h6>
+                    <h2 class="mb-3 fw-bold">Explore Our Clinic Departments</h2>
+                    <p class="text-muted">Specialized physiotherapy, neuro-rehabilitation, autism care, and holistic therapy programs designed for long-term health and independence.</p>
+                </div>
+                <div class="row g-4 justify-content-center">
+                    @foreach($clinicDepartments as $department)
+                        <div class="col-xl-3 col-lg-4 col-md-6 d-flex align-items-stretch">
+                            <div class="card w-100 shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column mb-4" style="background: #fff;">
+                                <div style="height: 190px; overflow: hidden; position: relative;">
+                                    <a href="{{ route('department-details', $department->slug) }}">
+                                        <img src="{{ $department->image_url }}" alt="{{ $department->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </a>
+                                </div>
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <h5 class="fw-bold mb-2">
+                                        <a href="{{ route('department-details', $department->slug) }}" class="text-decoration-none text-dark">
+                                            {{ $department->title }}
+                                        </a>
+                                    </h5>
+                                    <p class="text-muted fs-small mb-3 flex-grow-1">
+                                        {{ \Illuminate\Support\Str::limit($department->short_description ?: strip_tags($department->details), 85) }}
+                                    </p>
+                                    <a href="{{ route('department-details', $department->slug) }}" class="text-primary fw-semibold text-decoration-none d-inline-flex align-items-center">
+                                        <span>Learn More</span>
+                                        <i class="fa-solid fa-arrow-right ms-2 fs-small"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="text-center mt-4">
+                    <a href="{{ route('our-departments') }}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold">
+                        View All Departments <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+        <!-- end clinic-departments section -->
+
         <!-- start quality-section -->
         <section class="quality-section p-t-120 p-b-200">
             <div class="container">

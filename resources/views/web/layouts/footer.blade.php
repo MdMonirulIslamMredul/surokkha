@@ -32,6 +32,11 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('our-departments') }}" class="{{ Request::is('our-departments*') ? 'footer-active' : '' }} text-decoration-none mb-3 d-block text-white">
+                            Departments
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('our-doctors') }}" class="{{ Request::is('our-doctors') ? 'footer-active' : '' }} text-decoration-none mb-3 d-block text-white">
                             {{ __('messages.web_home.doctors') }}
                         </a>
