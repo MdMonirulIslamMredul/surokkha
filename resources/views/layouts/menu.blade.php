@@ -235,6 +235,14 @@
         </li>
     @endif
 
+    {{-- Clinical Diagnoses (Dx) --}}
+    <li class="nav-item {{ Request::is('clinical-diagnoses*') ? 'active' : '' }}">
+        <a class="nav-link d-flex align-items-center py-3" href="{{ route('clinical-diagnoses.index') }}">
+            <span class="aside-menu-icon me-3"><i class="fa-solid fa-notes-medical"></i></span>
+            <span class="aside-menu-title">Diagnoses (Dx)</span>
+        </a>
+    </li>
+
     {{-- @module('Doctor Departments',$modules) --}}
 
     {{-- @endmodule --}}
@@ -307,6 +315,14 @@
             <span class="d-none">{{ __('messages.cms') }}</span>
             <span class="d-none">{{ __('messages.front_cms_services') }}</span>
             <span class="d-none">{{ __('messages.complaint') }}</span>
+        </a>
+    </li>
+
+    {{-- Clinic Departments --}}
+    <li class="nav-item {{ Request::is('clinic-departments*') ? 'active' : '' }}">
+        <a class="nav-link d-flex align-items-center py-3" href="{{ route('clinic-departments.index') }}">
+            <span class="aside-menu-icon me-3"><i class="fa-solid fa-hospital-user"></i></span>
+            <span class="aside-menu-title">Clinic Departments</span>
         </a>
     </li>
 
@@ -518,6 +534,30 @@
                 </a>
             </li>
         @endif
+
+        {{-- Diagnostic & Therapy Service Billing --}}
+        <li class="nav-item {{ Request::is('test-service-bills*') ? 'active' : '' }}">
+            <a class="nav-link d-flex align-items-center py-3" href="{{ route('test-service-bills.index') }}">
+                <span class="aside-menu-icon me-3"><i class="fas fa-file-invoice-dollar"></i></span>
+                <span class="aside-menu-title">Test & Service Billing</span>
+            </a>
+        </li>
+
+        {{-- Referrers Management --}}
+        <li class="nav-item {{ Request::is('referrers*') ? 'active' : '' }}">
+            <a class="nav-link d-flex align-items-center py-3" href="{{ route('referrers.index') }}">
+                <span class="aside-menu-icon me-3"><i class="fas fa-users-cog"></i></span>
+                <span class="aside-menu-title">Referrers</span>
+            </a>
+        </li>
+
+        {{-- Referral Payouts --}}
+        <li class="nav-item {{ Request::is('referral-payouts*') ? 'active' : '' }}">
+            <a class="nav-link d-flex align-items-center py-3" href="{{ route('referral-payouts.index') }}">
+                <span class="aside-menu-icon me-3"><i class="fas fa-hand-holding-usd"></i></span>
+                <span class="aside-menu-title">Referral Payouts</span>
+            </a>
+        </li>
     @endrole
     @if (Auth::user()->email_verified_at != null)
         @role('Doctor')
@@ -594,6 +634,14 @@
                     </a>
                 </li>
             @endif
+
+            {{-- Clinical Diagnoses (Dx) --}}
+            <li class="nav-item {{ Request::is('clinical-diagnoses*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('clinical-diagnoses.index') }}">
+                    <span class="aside-menu-icon me-3"><i class="fa-solid fa-notes-medical"></i></span>
+                    <span class="aside-menu-title">Diagnoses (Dx)</span>
+                </a>
+            </li>
 
             @module('Documents', $modules)
                 <li class="nav-item  {{ Request::is('documents*') ? 'active' : '' }}">
@@ -1125,6 +1173,30 @@
             {{--    </a> --}}
             {{-- </li> --}}
             {{-- @endmodule --}}
+
+            {{-- Diagnostic & Therapy Service Billing --}}
+            <li class="nav-item {{ Request::is('test-service-bills*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('test-service-bills.index') }}">
+                    <span class="aside-menu-icon me-3"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <span class="aside-menu-title">Test & Service Billing</span>
+                </a>
+            </li>
+
+            {{-- Referrers Management --}}
+            <li class="nav-item {{ Request::is('referrers*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('referrers.index') }}">
+                    <span class="aside-menu-icon me-3"><i class="fas fa-users-cog"></i></span>
+                    <span class="aside-menu-title">Referrers</span>
+                </a>
+            </li>
+
+            {{-- Referral Payouts --}}
+            <li class="nav-item {{ Request::is('referral-payouts*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('referral-payouts.index') }}">
+                    <span class="aside-menu-icon me-3"><i class="fas fa-hand-holding-usd"></i></span>
+                    <span class="aside-menu-title">Referral Payouts</span>
+                </a>
+            </li>
         @endrole
 
         @role('Pharmacist')
@@ -1620,6 +1692,22 @@
                     </a>
                 </li>
             @endmodule
+
+            {{-- Diagnostic & Therapy Service Billing --}}
+            <li class="nav-item {{ Request::is('test-service-bills*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('test-service-bills.index') }}">
+                    <span class="aside-menu-icon me-3"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <span class="aside-menu-title">Test & Service Billing</span>
+                </a>
+            </li>
+
+            {{-- Referral Payouts --}}
+            <li class="nav-item {{ Request::is('referral-payouts*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('referral-payouts.index') }}">
+                    <span class="aside-menu-icon me-3"><i class="fas fa-hand-holding-usd"></i></span>
+                    <span class="aside-menu-title">Referral Payouts</span>
+                </a>
+            </li>
         @endrole
 
         @role('Patient')
@@ -1808,5 +1896,14 @@
                     </a>
                 </li>
             @endif
+        @endrole
+
+        @role('Referral')
+            <li class="nav-item {{ Request::is('referrer/dashboard*') ? 'active' : '' }}">
+                <a class="nav-link d-flex align-items-center py-3" href="{{ route('referrer.dashboard') }}">
+                    <span class="aside-menu-icon me-3"><i class="fas fa-chart-pie"></i></span>
+                    <span class="aside-menu-title">Referral Dashboard</span>
+                </a>
+            </li>
         @endrole
     @endif

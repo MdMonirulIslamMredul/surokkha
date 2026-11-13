@@ -978,22 +978,29 @@
         </li>
         @role('Admin')
             <li
-                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*') ? 'd-none' : '' }}">
+                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*', 'clinic-departments*') ? 'd-none' : '' }}">
                 <a class="nav-link p-0  {{ Request::is('front-settings*') ? 'active' : '' }}"
                     href="{{ route('front.settings.index') }}">
                     {{ __('messages.cms') }}
                 </a>
             </li>
             <li
-                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*') ? 'd-none' : '' }}">
+                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*', 'clinic-departments*') ? 'd-none' : '' }}">
                 <a class="nav-link p-0  {{ Request::is('front-cms-services*') ? 'active' : '' }}"
                     href="{{ route('front.cms.services.index') }}">
                     {{ __('messages.front_cms_services') }}
                 </a>
             </li>
+            <li
+                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*', 'clinic-departments*') ? 'd-none' : '' }}">
+                <a class="nav-link p-0 {{ Request::is('clinic-departments*') ? 'active' : '' }}"
+                    href="{{ route('clinic-departments.index') }}">
+                    Clinic Departments
+                </a>
+            </li>
             @module('Notice Boards', $modules)
                 <li
-                    class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*') ? 'd-none' : '' }}">
+                    class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*', 'clinic-departments*') ? 'd-none' : '' }}">
                     <a class="nav-link p-0 {{ Request::is('notice-boards*') ? 'active' : '' }}" href="{{ url('notice-boards') }}">
                         {{ __('messages.notice_boards') }}
                     </a>
@@ -1002,7 +1009,7 @@
 
             @module('Testimonial', $modules)
                 <li
-                    class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*') ? 'd-none' : '' }}">
+                    class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*', 'clinic-departments*') ? 'd-none' : '' }}">
                     <a class="nav-link p-0 {{ Request::is('testimonials*') ? 'active' : '' }}"
                         href="{{ route('testimonials.index') }}">
                         {{ __('messages.testimonials') }}
@@ -1011,7 +1018,7 @@
             @endmodule
 
             <li
-                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*') ? 'd-none' : '' }}">
+                class="nav-item position-relative mx-xl-3 mb-3 mb-xl-0 {{ !Request::is('front-settings*', 'notice-boards*', 'testimonials*', 'front-cms-services*', 'terms-and-conditions*','complaints*', 'clinic-departments*') ? 'd-none' : '' }}">
                 <a class="nav-link p-0 {{ Request::is('complaints*') ? 'active' : '' }}"
                     href="{{ route('complaints.index') }}">
                     {{ __('messages.complaint') }}
