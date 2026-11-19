@@ -20,9 +20,11 @@ class UpdatePatientRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userId = $this->route('patient')->patientUser->id ?? null;
         $rules = Patient::$rules;
-        $rules['password'] = 'same:password_confirmation|min:6';
-        $rules['email'] = 'required|email:filter|unique:users,email,'.$this->route('patient')->patientUser->id;
+        $rules['password'] = 'nullable|same:password_confirmation|min:6';
+        $rules['email'] = 'nullable|email:filter|unique:users,email,'.$userId;
+        $rules['phone'] = 'required|unique:users,phone,'.$userId;
         $rules['image'] = 'mimes:jpeg,jpg,png,gif';
 
         return $rules;

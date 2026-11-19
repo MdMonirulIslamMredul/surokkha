@@ -24,6 +24,36 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
+    public function username()
+    {
+        $login = request()->input('login') ?? request()->input('email');
+        return filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+    }
+
+    protected function validateLogin(Request $request)
+    {
+        $login = $request->input('login') ?? $request->input('email');
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $request->merge([$field => $login]);
+
+        $request->validate([
+            $field => 'required|string',
+            'password' => 'required|string',
+        ], [
+            $field . '.required' => __('messages.user.email') . ' / ' . __('messages.user.phone') . ' is required.',
+        ]);
+    }
+
+    protected function credentials(Request $request)
+    {
+        $login = $request->input('login') ?? $request->input('email');
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        return [
+            $field => $login,
+            'password' => $request->input('password'),
+        ];
+    }
+
     protected function sendLoginResponse(Request $request)
     {
         $request->session()->regenerate();
@@ -32,7 +62,7 @@ class LoginController extends Controller
 
         $user = getLoggedInUser();
 
-        if ($user->email_verified_at == null) {
+        if ($user->email_verified_at == null && ! empty($user->email) && ! $user->hasRole(['Patient', 'Referral'])) {
             auth()->logout();
             Flash::error(__('messages.verification.verify_your_email_address'));
             return redirect('login');
@@ -53,6 +83,8 @@ class LoginController extends Controller
                 $this->redirectTo = 'employee/doctor';
             } elseif ($request->user()->hasRole(['Patient'])) {
                 $this->redirectTo = 'patient-dashboard';
+            } elseif ($request->user()->hasRole(['Referral'])) {
+                $this->redirectTo = 'referrer/dashboard';
             } elseif ($request->user()->hasRole(['Nurse'])) {
                 $this->redirectTo = 'bed-types';
             } elseif ($request->user()->hasRole(['Accountant'])) {
@@ -62,17 +94,21 @@ class LoginController extends Controller
             }
         }
 
-      if (! isset($request->remember)) {
+        $loginValue = $request->input('login') ?? $request->input('email');
+
+        if (! isset($request->remember)) {
             return $this->authenticated($request, $this->guard()->user())
                 ?: redirect()->intended($this->redirectPath())
                 ->withCookie(Cookie::forget('email'))
+                ->withCookie(Cookie::forget('login'))
                 ->withCookie(Cookie::forget('password'))
                 ->withCookie(Cookie::forget('remember'));
         }
 
         return $this->authenticated($request, $this->guard()->user())
             ?: redirect()->intended($this->redirectPath())
-            ->withCookie(Cookie::make('email', $request->email, 3600))
+            ->withCookie(Cookie::make('email', $loginValue, 3600))
+            ->withCookie(Cookie::make('login', $loginValue, 3600))
             ->withCookie(Cookie::make('password', $request->password, 3600))
             ->withCookie(Cookie::make('remember', 1, 3600));
     }
@@ -82,6 +118,7 @@ class LoginController extends Controller
         App::setLocale(checkLanguageSession());
         throw ValidationException::withMessages([
             'email' => __('auth.failed'),
+            'login' => __('auth.failed'),
         ]);
     }
 

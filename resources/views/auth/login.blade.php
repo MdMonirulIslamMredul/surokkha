@@ -46,12 +46,12 @@
             <form method="post" action="{{ url('/login') }}">
                 @csrf
                 <div class="mb-sm-7 mb-4">
-                    <label for="email" class="form-label">
-                        {{ __('auth.email') . ':' }}<span class="required"></span>
+                    <label for="login" class="form-label">
+                        {{ __('messages.user.email') . ' / ' . __('messages.user.phone') }}:<span class="required"></span>
                     </label>
-                    <input name="email" type="email" class="form-control" id="email" aria-describedby="emailHelp"
-                        required placeholder="{{ __('auth.email') }}"
-                        value="{{ Cookie::get('email') !== null ? Cookie::get('email') : old('email') }}">
+                    <input name="login" type="text" class="form-control" id="login"
+                        required placeholder="{{ __('messages.user.email') . ' / ' . __('messages.user.phone') }}"
+                        value="{{ Cookie::get('login') !== null ? Cookie::get('login') : (Cookie::get('email') !== null ? Cookie::get('email') : old('login', old('email'))) }}">
                 </div>
                 <div class="mb-sm-7 mb-4">
                     <div class="d-flex justify-content-between">
@@ -72,11 +72,18 @@
                 <div class="d-grid" >
                     <button type="submit" class="btn btn-primary">{{ __('auth.login.login') }}</button>
                 </div>
-                <div class="d-flex align-items-center mb-10 mt-4">
-                    <span class="text-gray-700 me-2">{{ __('auth.new_here') }}</span>
-                    <a href="{{ route('register') }}" class="link-info fs-6 text-decoration-none">
-                        {{ __('auth.create_an_account') }}
-                    </a>
+                <div class="d-flex justify-content-between align-items-center mb-10 mt-4">
+                    <div>
+                        <span class="text-gray-700 me-2">{{ __('auth.new_here') }}</span>
+                        <a href="{{ route('register') }}" class="link-info fs-6 text-decoration-none">
+                            {{ __('auth.create_an_account') }}
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{{ route('referrer.register') }}" class="text-primary fw-bold fs-7 text-decoration-none">
+                            <i class="fas fa-handshake me-1"></i> Referrer Partner Sign Up
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>

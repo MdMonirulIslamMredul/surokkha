@@ -660,7 +660,15 @@ function divider($numberOfDigits)
  */
 function preparePhoneNumber($input, $key)
 {
-    return (! empty($input[$key])) ? '+' . $input['prefix_code'] . $input[$key] : null;
+    if (empty($input[$key])) {
+        return null;
+    }
+
+    if (! empty($input['prefix_code'])) {
+        return '+' . ltrim($input['prefix_code'], '+') . $input[$key];
+    }
+
+    return $input[$key];
 }
 
 /**
@@ -797,6 +805,10 @@ function addNotification($data)
  */
 function getNotification($role)
 {
+    if (!$role || !isset(Notification::NOTIFICATION_FOR[$role])) {
+        return collect();
+    }
+
     return Notification::whereUserId(Auth::id())->whereNotificationFor(Notification::NOTIFICATION_FOR[$role])->where(
         'read_at',
         null
