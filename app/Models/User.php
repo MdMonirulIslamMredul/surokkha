@@ -335,6 +335,8 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
                 return Notification::NURSE;
             case Pharmacist::class:
                 return Notification::PHARMACIST;
+            case Referrer::class:
+                return 'Referral';
             default:
                 return Notification::ADMIN;
         }
@@ -354,6 +356,11 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function admin(): HasOne
     {
         return $this->hasOne(admin::class);
+    }
+
+    public function referrer(): HasOne
+    {
+        return $this->hasOne(Referrer::class);
     }
 
     public function getGenderStringAttribute()

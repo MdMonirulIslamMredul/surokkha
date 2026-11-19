@@ -559,7 +559,7 @@
             </a>
         </li>
     @endrole
-    @if (Auth::user()->email_verified_at != null)
+    @if (Auth::user()->email_verified_at != null || Auth::user()->hasRole(['Patient', 'Referral']))
         @role('Doctor')
             @module('Appointments', $modules)
                 <li class="nav-item  {{ Request::is('appointments*','patient-queue*') ? 'active' : '' }}">
