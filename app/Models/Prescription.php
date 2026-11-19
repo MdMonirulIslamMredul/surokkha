@@ -95,6 +95,20 @@ class Prescription extends Model
         'id',
         'patient_id',
         'doctor_id',
+        'prescription_type',
+        'c_c',
+        'h_o',
+        's_s',
+        'investigation',
+        'vas',
+        'dx',
+        'pt_rx',
+        'medication_other_support',
+        'patient_age',
+        'patient_height',
+        'patient_weight',
+        'patient_bmi',
+        'patient_occupation',
         'food_allergies',
         'tendency_bleed',
         'heart_disease',
@@ -146,11 +160,28 @@ class Prescription extends Model
         'advice' => 'string',
         'next_visit_qty' => 'string',
         'next_visit_time' => 'string',
+        'prescription_type' => 'string',
+        'c_c' => 'string',
+        'h_o' => 'string',
+        's_s' => 'string',
+        'investigation' => 'string',
+        'vas' => 'integer',
+        'dx' => 'string',
+        'pt_rx' => 'string',
+        'medication_other_support' => 'string',
+        'patient_age' => 'integer',
+        'patient_height' => 'string',
+        'patient_weight' => 'string',
+        'patient_bmi' => 'string',
+        'patient_occupation' => 'string',
     ];
 
     public static $rules = [
         'patient_id' => 'required',
     ];
+
+    const TYPE_PHYSIOTHERAPY = 'physiotherapy';
+    const TYPE_GENERAL = 'general';
 
     const STATUS_ALL = 2;
 

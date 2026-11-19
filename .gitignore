@@ -37,8 +37,14 @@ node_modules
 .env.backup
 .env.production
 /vendor
+/vendor/
+vendor/
+/vendor/composer/
+vendor/composer/
 /public/assets/plugins/tinymce/
 tinymce/
 /storage/mpdf/
 /storage/fonts/
 
+
+*.zip

@@ -1,3 +1,6 @@
+@if(!isset($prescription['prescription']->prescription_type) || $prescription['prescription']->prescription_type === 'physiotherapy')
+    @include('prescriptions.physio_view_fields')
+@else
 <div class="row">
     <div class="col-md-4 col-sm-6 co-12">
         <div class="image mb-7">
@@ -266,3 +269,4 @@
         </div>
     </div>
 </div>
+@endif

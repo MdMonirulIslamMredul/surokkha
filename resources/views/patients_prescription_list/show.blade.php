@@ -7,6 +7,10 @@
         <div class="d-md-flex align-items-center justify-content-between mb-7">
             <h1 class="mb-0">@yield('title')</h1>
             <div class="text-end mt-4 mt-md-0">
+                <a href="{{ route('prescriptions.pdf', $prescription->id) }}" target="_blank"
+                   class="btn btn-success me-2">
+                    <i class="fas fa-print me-1"></i> {{ __('messages.ipd_patient_prescription.print_prescription') }}
+                </a>
                 <a href="{{ url()->previous() }}"
                    class="btn btn-outline-primary ms-2">{{ __('messages.common.back') }}</a>
             </div>
@@ -19,7 +23,11 @@
         <div class="d-flex flex-column">
             <div class="card">
                 <div class="card-body">
-                    @include('prescriptions.show_fields')
+                    @if(!isset($prescription->prescription_type) || $prescription->prescription_type === 'physiotherapy')
+                        @include('prescriptions.physio_view_fields', ['prescription' => ['prescription' => $prescription], 'data' => \App\Models\Setting::pluck('value', 'key')])
+                    @else
+                        @include('prescriptions.show_fields')
+                    @endif
                 </div>
             </div>
         </div>

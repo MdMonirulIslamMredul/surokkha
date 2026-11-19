@@ -22,6 +22,27 @@
                 {{ Form::text('company_name', $settings['company_name'], ['class' => 'form-control', 'required', 'placeholder' => __('messages.setting.company_name')]) }}
             </div>
         </div>
+        <!-- Clinic Name Bangla Field -->
+        <div class="col-md-6">
+            <div class="form-group mb-5">
+                {{ Form::label('clinic_name_bangla', 'Clinic Name (Bangla / বাংলা):', ['class' => 'form-label']) }}
+                {{ Form::text('clinic_name_bangla', $settings['clinic_name_bangla'] ?? 'সুরক্ষা ফিজিওথেরাপি এন্ড অটিজম কেয়ার', ['class' => 'form-control', 'placeholder' => 'সুরক্ষা ফিজিওথেরাপি এন্ড অটিজম কেয়ার']) }}
+            </div>
+        </div>
+        <!-- Clinic Name English Field -->
+        <div class="col-md-6">
+            <div class="form-group mb-5">
+                {{ Form::label('clinic_name_eng', 'Clinic Name (English):', ['class' => 'form-label']) }}
+                {{ Form::text('clinic_name_eng', $settings['clinic_name_eng'] ?? 'SUROKKHA PHYSIOTHERAPY AND AUTISM CARE', ['class' => 'form-control', 'placeholder' => 'SUROKKHA PHYSIOTHERAPY AND AUTISM CARE']) }}
+            </div>
+        </div>
+        <!-- Clinic Subtitle Field -->
+        <div class="col-md-12">
+            <div class="form-group mb-5">
+                {{ Form::label('clinic_subtitle', 'Clinic Tagline / Subtitle (Prescription Header):', ['class' => 'form-label']) }}
+                {{ Form::text('clinic_subtitle', $settings['clinic_subtitle'] ?? 'A Specialized Center for Physical Rehabilitation & Neurodevelopment', ['class' => 'form-control', 'placeholder' => 'A Specialized Center for Physical Rehabilitation & Neurodevelopment']) }}
+            </div>
+        </div>
         <!-- Hospital Email Field -->
         <div class="col-md-6">
             <div class="form-group mb-5">
@@ -279,6 +300,14 @@
                     data-bs-original-title="{{ __('messages.prefix_tooltip') }}">
                 </i>
                     {{ Form::text('custom_serial_prefix', $settings['custom_serial_prefix'] ?? '', ['class' => 'form-control', 'id' => 'serialPrefix', 'placeholder' => __('Custom Serial Prefix')]) }}
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="form-group mt-2">
+                    {{ Form::label('referral_commission_percentage', 'Default Referral Commission (%):', ['class' => 'form-label']) }}
+                    {{ Form::number('referral_commission_percentage', $settings['referral_commission_percentage'] ?? 10, ['class' => 'form-control', 'step' => '0.01', 'min' => '0', 'max' => '100', 'placeholder' => '10']) }}
+                    <span class="text-muted fs-7">Global commission % earned by referrers from diagnostic test and therapy service bills.</span>
                 </div>
             </div>
         </div>

@@ -153,37 +153,57 @@ class PrescriptionRepository extends BaseRepository
             $prescription->update($prescriptionMedicineArr);
             $medicineBill = MedicineBill::with('saleMedicine')->whereModelType(\App\Models\Prescription::class)->whereModelId($prescription->id)->first();
             $prescription->getMedicine()->delete();
-            $medicineBill->saleMedicine()->delete();
+            if ($medicineBill) {
+                $medicineBill->saleMedicine()->delete();
+            }
             $amount = 0;
             $qty = 0;
 
             if (! empty($input['medicine'])) {
+                if (! $medicineBill) {
+                    $medicineBill = MedicineBill::create([
+                        'bill_number' => generateUniqueBillNumber(),
+                        'patient_id' => $prescription->patient_id,
+                        'doctor_id' => $prescription->doctor_id,
+                        'model_type' => \App\Models\Prescription::class,
+                        'model_id' => $prescription->id,
+                        'bill_date' => Carbon::now(),
+                        'payment_status' => MedicineBill::UNPAID,
+                    ]);
+                }
                 foreach ($input['medicine'] as $key => $value) {
+                    if (empty($input['medicine'][$key])) {
+                        continue;
+                    }
                     $PrescriptionItem = [
                         'prescription_id' => $prescription->id,
                         'medicine' => $input['medicine'][$key],
-                        'dosage' => $input['dosage'][$key],
-                        'day' => $input['day'][$key],
-                        'time' => $input['time'][$key],
-                        'dose_interval' => $input['dose_interval'][$key],
-                        'comment' => $input['comment'][$key],
+                        'dosage' => $input['dosage'][$key] ?? null,
+                        'day' => $input['day'][$key] ?? 1,
+                        'time' => $input['time'][$key] ?? 1,
+                        'dose_interval' => $input['dose_interval'][$key] ?? 1,
+                        'comment' => $input['comment'][$key] ?? null,
                     ];
                     $prescriptionMedicine = PrescriptionMedicineModal::create($PrescriptionItem);
                     $medicine = Medicine::find($input['medicine'][$key]);
-                    $amount += $input['day'][$key] * $input['dose_interval'][$key] * $medicine->selling_price;
-                    $qty = $input['day'][$key] * $input['dose_interval'][$key];
-                    $saleMedicineArray = [
-                        'medicine_bill_id' => $medicineBill->id,
-                        'medicine_id' => $medicine->id,
-                        'sale_quantity' => $qty,
-                        'sale_price' => $medicine->selling_price,
-                        'tax' => 0,
-                    ];
-                    SaleMedicine::create($saleMedicineArray);
+                    if ($medicine) {
+                        $amount += ($input['day'][$key] ?? 1) * ($input['dose_interval'][$key] ?? 1) * $medicine->selling_price;
+                        $qty = ($input['day'][$key] ?? 1) * ($input['dose_interval'][$key] ?? 1);
+                        $saleMedicineArray = [
+                            'medicine_bill_id' => $medicineBill->id,
+                            'medicine_id' => $medicine->id,
+                            'sale_quantity' => $qty,
+                            'sale_price' => $medicine->selling_price,
+                            'tax' => 0,
+                        ];
+                        SaleMedicine::create($saleMedicineArray);
+                    }
                 }
-                $medicineBill->update([
-                    'net_amount' => $amount,
-                ]);
+                if ($medicineBill) {
+                    $medicineBill->update([
+                        'net_amount' => $amount,
+                    ]);
+                }
             }
 
         } catch (Exception $e) {

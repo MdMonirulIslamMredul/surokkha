@@ -68,37 +68,44 @@ class PrescriptionController extends AppBaseController
     {
         $input = $request->all();
         $input['status'] = isset($input['status']) ? 1 : 0;
+        $input['prescription_type'] = $input['prescription_type'] ?? Prescription::TYPE_PHYSIOTHERAPY;
 
-        if (!isset($input['medicine'])) {
+        $hasMedicines = isset($input['medicine']) && is_array($input['medicine']) && count(array_filter($input['medicine'])) > 0;
+
+        if (! $hasMedicines && $input['prescription_type'] === Prescription::TYPE_GENERAL) {
             return $this->sendError(__('messages.medicine_bills.medicine_not_selected'));
         }
 
-        $arr = collect($input['medicine']);
-        $duplicateIds = $arr->duplicates();
+        if ($hasMedicines) {
+            $arr = collect($input['medicine']);
+            $duplicateIds = $arr->duplicates();
 
-        foreach ($input['medicine'] as $key => $value) {
-            $medicine = Medicine::find($input['medicine'][$key]);
-            if (!empty($duplicateIds)) {
-                foreach ($duplicateIds as $key => $value) {
-                    $medicine = Medicine::find($duplicateIds[$key]);
+            foreach ($input['medicine'] as $key => $value) {
+                if (empty($value)) {
+                    continue;
+                }
+                $medicine = Medicine::find($value);
+                if (!empty($duplicateIds) && isset($duplicateIds[$key])) {
                     Flash::error(__('messages.medicine_bills.duplicate_medicine'));
 
                     return Redirect::back();
                 }
-            }
 
-            $qty = $input['day'][$key] * $input['dose_interval'][$key];
+                $qty = ($input['day'][$key] ?? 1) * ($input['dose_interval'][$key] ?? 1);
 
-            if ($medicine->available_quantity < $qty) {
-                $available = $medicine->available_quantity == null ? 0 : $medicine->available_quantity;
-                Flash::error(__('messages.medicine_bills.available_quantity') . ' ' . $medicine->name . ' ' . __('messages.medicine_bills.is') . ' ' . $available . '.');
+                if ($medicine && $medicine->available_quantity < $qty) {
+                    $available = $medicine->available_quantity == null ? 0 : $medicine->available_quantity;
+                    Flash::error(__('messages.medicine_bills.available_quantity') . ' ' . $medicine->name . ' ' . __('messages.medicine_bills.is') . ' ' . $available . '.');
 
-                return Redirect::back();
+                    return Redirect::back();
+                }
             }
         }
 
         $prescription = $this->prescriptionRepository->create($input);
-        $this->prescriptionRepository->createPrescription($input, $prescription);
+        if ($hasMedicines) {
+            $this->prescriptionRepository->createPrescription($input, $prescription);
+        }
         $this->prescriptionRepository->createNotification($input);
         Flash::success(__('messages.prescription.prescription') . ' ' . __('messages.common.saved_successfully'));
 
@@ -145,16 +152,6 @@ class PrescriptionController extends AppBaseController
     public function update(Prescription $prescription, UpdatePrescriptionRequest $request)
     {
         $prescription = $this->prescriptionRepository->find($prescription->id);
-        $prescription->load('getMedicine');
-        $prescriptionMedicineArray = [];
-        $inputdoseAndMedicine = [];
-
-        foreach ($prescription->getMedicine as $prescriptionMedicine) {
-            $prescriptionMedicineArray[$prescriptionMedicine->medicine] = $prescriptionMedicine->dosage;
-        }
-        foreach ($request->medicine as $key => $value) {
-            $inputdoseAndMedicine[$value] = $request->dosage[$key];
-        }
 
         if (empty($prescription)) {
             Flash::error(__('messages.medicine_bills.prescription_not_found'));
@@ -162,33 +159,56 @@ class PrescriptionController extends AppBaseController
             return redirect(route('prescriptions.index'));
         }
 
+        $prescription->load('getMedicine');
         $input = $request->all();
         $input['status'] = isset($input['status']) ? 1 : 0;
-        $arr = collect($input['medicine']);
-        $duplicateIds = $arr->duplicates();
+        $input['prescription_type'] = $input['prescription_type'] ?? $prescription->prescription_type ?? Prescription::TYPE_PHYSIOTHERAPY;
 
-        foreach ($input['medicine'] as $key => $value) {
-            $result = array_intersect($prescriptionMedicineArray, $inputdoseAndMedicine);
-            $medicine = Medicine::find($input['medicine'][$key]);
-            $qty = $input['day'][$key] * $input['dose_interval'][$key];
+        $hasMedicines = isset($input['medicine']) && is_array($input['medicine']) && count(array_filter($input['medicine'])) > 0;
 
-            if (!empty($duplicateIds)) {
-                foreach ($duplicateIds as $key => $value) {
-                    $medicine = Medicine::find($duplicateIds[$key]);
+        if ($hasMedicines) {
+            $prescriptionMedicineArray = [];
+            $inputdoseAndMedicine = [];
+
+            foreach ($prescription->getMedicine as $prescriptionMedicine) {
+                $prescriptionMedicineArray[$prescriptionMedicine->medicine] = $prescriptionMedicine->dosage;
+            }
+            if (isset($request->medicine) && is_array($request->medicine)) {
+                foreach ($request->medicine as $key => $value) {
+                    if (empty($value)) {
+                        continue;
+                    }
+                    $inputdoseAndMedicine[$value] = $request->dosage[$key] ?? '';
+                }
+            }
+
+            $arr = collect($input['medicine']);
+            $duplicateIds = $arr->duplicates();
+
+            foreach ($input['medicine'] as $key => $value) {
+                if (empty($value)) {
+                    continue;
+                }
+                $result = array_intersect($prescriptionMedicineArray, $inputdoseAndMedicine);
+                $medicine = Medicine::find($value);
+                $qty = ($input['day'][$key] ?? 1) * ($input['dose_interval'][$key] ?? 1);
+
+                if (!empty($duplicateIds) && isset($duplicateIds[$key])) {
                     Flash::error(__('messages.medicine_bills.duplicate_medicine'));
 
                     return Redirect::back();
                 }
-            }
 
-            if (!array_key_exists($input['medicine'][$key], $result) && $medicine->available_quantity < $qty) {
-                $available = $medicine->available_quantity == null ? 0 : $medicine->available_quantity;
-                Flash::error(__('messages.common.available_quantity_of') . $medicine->name . __('messages.common.is') . $available . '.');
+                if ($medicine && !array_key_exists($value, $result) && $medicine->available_quantity < $qty) {
+                    $available = $medicine->available_quantity == null ? 0 : $medicine->available_quantity;
+                    Flash::error(__('messages.common.available_quantity_of') . $medicine->name . __('messages.common.is') . $available . '.');
 
-                return Redirect::back();
+                    return Redirect::back();
+                }
             }
         }
-        $this->prescriptionRepository->updatePrescription($prescription, $request->all());
+
+        $this->prescriptionRepository->updatePrescription($prescription, $input);
 
         Flash::success(__('messages.prescription.prescription') . ' ' . __('messages.common.updated_successfully'));
 
@@ -259,9 +279,155 @@ class PrescriptionController extends AppBaseController
 
         $medicines = $this->prescriptionRepository->getMedicineData($id);
 
-        $pdf = PDF::loadView('prescriptions.prescription_pdf', compact('prescription', 'medicines', 'data'));
+        $viewName = ($prescription['prescription']->prescription_type === Prescription::TYPE_PHYSIOTHERAPY)
+            ? 'prescriptions.physio_prescription_pdf'
+            : 'prescriptions.prescription_pdf';
 
-        return $pdf->stream($prescription['prescription']->patient->patientUser->full_name . '-' . $prescription['prescription']->id);
+        return $this->generateMpdfResponse($viewName, compact('prescription', 'medicines', 'data'), $prescription['prescription']);
+    }
+
+    private function generateMpdfResponse($viewName, $compactData, $prescriptionModel)
+    {
+        try {
+            $tempDir = storage_path('mpdf');
+            if (!file_exists($tempDir)) {
+                @mkdir($tempDir, 0777, true);
+            }
+            if (!file_exists($tempDir . '/mpdf')) {
+                @mkdir($tempDir . '/mpdf', 0777, true);
+            }
+            if (!file_exists($tempDir . '/ttfontdata')) {
+                @mkdir($tempDir . '/ttfontdata', 0777, true);
+            }
+
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
+            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $defaultFontConfig['fontdata'];
+
+            $mpdf = new \Mpdf\Mpdf([
+                'tempDir' => $tempDir,
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 8,
+                'margin_right' => 8,
+                'margin_top' => 6,
+                'margin_bottom' => 12,
+                'margin_header' => 0,
+                'margin_footer' => 3,
+                'fontDir' => array_merge($fontDirs, [
+                    public_path('fonts/bangla'),
+                ]),
+                'fontdata' => $fontData + [
+                    'kalpurush' => [
+                        'R' => 'kalpurush.ttf',
+                        'useOTL' => 0xFF,
+                        'useKashida' => 75,
+                    ],
+                    'vrinda' => [
+                        'R' => 'vrinda.ttf',
+                        'B' => 'vrindab.ttf',
+                        'useOTL' => 0xFF,
+                    ],
+                ],
+                'default_font' => 'kalpurush',
+                'autoScriptToLang' => true,
+                'autoLangToFont' => true,
+            ]);
+
+            // Set dynamic watermark if available
+            $logoPath = null;
+            $data = $compactData['data'] ?? [];
+            if (!empty($data['app_logo'])) {
+                $rawLogo = $data['app_logo'];
+                if (filter_var($rawLogo, FILTER_VALIDATE_URL)) {
+                    $pathOnly = parse_url($rawLogo, PHP_URL_PATH);
+                    $cand = public_path(ltrim($pathOnly, '/\\'));
+                    if (file_exists($cand)) {
+                        $logoPath = $cand;
+                    }
+                } elseif (file_exists(public_path($rawLogo))) {
+                    $logoPath = public_path($rawLogo);
+                } elseif (file_exists(storage_path('app/public/' . $rawLogo))) {
+                    $logoPath = storage_path('app/public/' . $rawLogo);
+                }
+            }
+            if (!$logoPath && file_exists(public_path('uploads/clinic/clinic_emblem.png'))) {
+                $logoPath = public_path('uploads/clinic/clinic_emblem.png');
+            }
+            if (!$logoPath && file_exists(public_path('web/img/logo.jpg'))) {
+                $logoPath = public_path('web/img/logo.jpg');
+            }
+
+            if ($logoPath && file_exists($logoPath)) {
+                $mpdf->SetWatermarkImage($logoPath, 0.04, [65, 65], [72, 105]);
+                $mpdf->showWatermarkImage = true;
+            }
+
+            $html = view($viewName, $compactData)->render();
+            $mpdf->WriteHTML($html);
+
+            $patientName = ($prescriptionModel->patient && $prescriptionModel->patient->patientUser)
+                ? $prescriptionModel->patient->patientUser->full_name
+                : 'Prescription';
+            $fileName = $patientName . '-' . $prescriptionModel->id . '.pdf';
+
+            return response($mpdf->Output($fileName, 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="' . $fileName . '"');
+        } catch (\Throwable $e) {
+            \Log::error('mPDF Generation failed, falling back to Dompdf: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
+            $pdf = PDF::loadView($viewName, $compactData);
+            $fileName = ($prescriptionModel->patient && $prescriptionModel->patient->patientUser ? $prescriptionModel->patient->patientUser->full_name : 'Prescription') . '-' . $prescriptionModel->id;
+            return $pdf->stream($fileName);
+        }
+    }
+
+    public function getPatientVitals($id)
+    {
+        $patient = \App\Models\Patient::with('patientUser')->find($id);
+        if (! $patient) {
+            return $this->sendError('Patient not found');
+        }
+
+        $age = $patient->age;
+        if (empty($age) && ! empty($patient->patientUser->dob)) {
+            $age = \Carbon\Carbon::parse($patient->patientUser->dob)->age;
+        }
+
+        return $this->sendResponse([
+            'id' => $patient->id,
+            'name' => $patient->patientUser->full_name,
+            'gender' => $patient->patientUser->gender == 0 ? 'M' : 'F',
+            'gender_text' => $patient->patientUser->gender == 0 ? 'Male' : 'Female',
+            'age' => $age,
+            'height' => $patient->height,
+            'weight' => $patient->weight,
+            'bmi' => $patient->bmi,
+            'occupation' => $patient->occupation,
+            'unique_id' => $patient->patient_unique_id,
+            'phone' => $patient->patientUser->phone,
+        ], 'Patient vitals retrieved successfully');
+    }
+
+    public function printBlankPad(Request $request)
+    {
+        $data = $this->prescriptionRepository->getSettingList();
+        $patient = null;
+        if ($request->has('patient_id') && ! empty($request->patient_id)) {
+            $patient = \App\Models\Patient::with('patientUser')->find($request->patient_id);
+        }
+        $doctor = null;
+        if (getLoggedinDoctor()) {
+            $doctor = \App\Models\Doctor::with('doctorUser', 'address')->where('user_id', \Auth::id())->first();
+        } elseif ($request->has('doctor_id') && ! empty($request->doctor_id)) {
+            $doctor = \App\Models\Doctor::with('doctorUser', 'address')->find($request->doctor_id);
+        } else {
+            $doctor = \App\Models\Doctor::with('doctorUser', 'address')->first();
+        }
+
+        return view('prescriptions.blank_pad', compact('data', 'patient', 'doctor'));
     }
 
     public function getAvailableMedicineQuantity(Medicine $medicine)

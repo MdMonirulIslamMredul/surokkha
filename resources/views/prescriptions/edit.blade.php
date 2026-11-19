@@ -33,36 +33,52 @@
                     @include('prescriptions.edit_fields')
                 </div>
             </div>
-            <div class="card mt-5">
-                <div class="card-header">
-                    <h3>{{ __('messages.prescription.physical_information') }}</h3>
-                </div>
-                <div class="card-body">
-                    @include('prescriptions.edit-physical-info-fields')
+
+            @php
+                $isPhysio = (!isset($prescription->prescription_type) || $prescription->prescription_type === 'physiotherapy');
+            @endphp
+
+            {{-- Specialized Physiotherapy & Autism Care Prescription Section --}}
+            <div id="physioPrescriptionWrapper" class="mt-5 {{ $isPhysio ? '' : 'd-none' }}">
+                @include('prescriptions.physio_fields')
+                <div class="d-flex justify-content-end mt-5">
+                    <button type="submit" class="btn btn-primary me-2 btnPrescriptionSave">{{ __('messages.common.save') }}</button>
+                    <a href="{{ route('prescriptions.index') }}" class="btn btn-secondary">{{ __('messages.common.cancel') }}</a>
                 </div>
             </div>
-            <div class="card mt-5">
-                <div class="card-header">
-                    <h3>{{ __('messages.medicines') }}</h3>
-                    <div>
-                        <a href="javascript:void(0)" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#add_new_medicine">
-                            {{ __('messages.prescription.new_medicine') }}
 
-                        </a>
-                        <a href="javascript:void(0)" class="btn btn-primary" id="openAiPrompt"
-                            data-loading-text = "<span class='spinner-border spinner-border-sm'></span> Processing..."> <i
-                                class="fa-solid fs-2 fa-wand-magic-sparkles"></i> {{ __('messages.open_ai.suggest_medicines') }}
-                        </a>
+            {{-- General Medical Prescription Section --}}
+            <div id="generalPrescriptionWrapper" class="mt-5 {{ $isPhysio ? 'd-none' : '' }}">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>{{ __('messages.prescription.physical_information') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        @include('prescriptions.edit-physical-info-fields')
                     </div>
                 </div>
-                <div class="card-body">
-                    @include('prescriptions.medical-table')
+                <div class="card mt-5">
+                    <div class="card-header">
+                        <h3>{{ __('messages.medicines') }}</h3>
+                        <div>
+                            <a href="javascript:void(0)" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#add_new_medicine">
+                                {{ __('messages.prescription.new_medicine') }}
+                            </a>
+                            <a href="javascript:void(0)" class="btn btn-primary" id="openAiPrompt"
+                                data-loading-text = "<span class='spinner-border spinner-border-sm'></span> Processing..."> <i
+                                    class="fa-solid fs-2 fa-wand-magic-sparkles"></i> {{ __('messages.open_ai.suggest_medicines') }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @include('prescriptions.medical-table')
+                    </div>
                 </div>
-            </div>
-            <div class="card mt-5">
-                <div class="card-body">
-                    @include('prescriptions.edit-other-fields')
+                <div class="card mt-5">
+                    <div class="card-body">
+                        @include('prescriptions.edit-other-fields')
+                    </div>
                 </div>
             </div>
             {{ Form::close() }}
@@ -73,5 +89,96 @@
     </div>
 @endsection
 @section('scripts')
-    {{--  assets/js/prescriptions/create-edit.js --}}
-@endsection
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Layout / Format Switcher
+            const typePhysio = document.getElementById('typePhysio');
+            const typeGeneral = document.getElementById('typeGeneral');
+            const physioWrapper = document.getElementById('physioPrescriptionWrapper');
+            const generalWrapper = document.getElementById('generalPrescriptionWrapper');
+            const generalMetaFields = document.getElementById('generalMetaFields');
+
+            function toggleLayout() {
+                if (typeGeneral && typeGeneral.checked) {
+                    if (physioWrapper) physioWrapper.classList.add('d-none');
+                    if (generalWrapper) generalWrapper.classList.remove('d-none');
+                    if (generalMetaFields) generalMetaFields.classList.remove('d-none');
+                } else {
+                    if (physioWrapper) physioWrapper.classList.remove('d-none');
+                    if (generalWrapper) generalWrapper.classList.add('d-none');
+                    if (generalMetaFields) generalMetaFields.classList.add('d-none');
+                }
+            }
+
+            if (typePhysio) typePhysio.addEventListener('change', toggleLayout);
+            if (typeGeneral) typeGeneral.addEventListener('change', toggleLayout);
+
+            // Fetch Patient Vitals on Patient Selection
+            const patientSelect = $('#editPrescriptionPatientId');
+            function fetchPatientVitals(patientId) {
+                if (!patientId) return;
+                $.ajax({
+                    url: '/prescriptions-patient-vitals/' + patientId,
+                    type: 'GET',
+                    success: function (res) {
+                        if (res.success && res.data) {
+                            const p = res.data;
+                            $('#patientRegNo').val(p.unique_id || 'N/A');
+                            if (!$('#patientAge').val()) $('#patientAge').val(p.age || '');
+                            if (!$('#patientSex').val()) $('#patientSex').val(p.gender_text || (p.gender === 'M' ? 'Male' : 'Female'));
+                            if (!$('#patientOccupation').val()) $('#patientOccupation').val(p.occupation || '');
+                            if (!$('#patientHeight').val()) $('#patientHeight').val(p.height || '');
+                            if (!$('#patientWeight').val()) $('#patientWeight').val(p.weight || '');
+                            if (!$('#patientBmi').val()) $('#patientBmi').val(p.bmi || '');
+                            calculateBmi();
+                        }
+                    }
+                });
+            }
+
+            if (patientSelect.length) {
+                patientSelect.on('change', function () {
+                    fetchPatientVitals($(this).val());
+                });
+                if (patientSelect.val()) {
+                    fetchPatientVitals(patientSelect.val());
+                }
+            }
+
+            // Live BMI Calculation
+            function calculateBmi() {
+                const h = parseFloat($('#patientHeight').val());
+                const w = parseFloat($('#patientWeight').val());
+                if (h > 0 && w > 0) {
+                    const hInM = h / 100;
+                    const bmi = (w / (hInM * hInM)).toFixed(2);
+                    $('#patientBmi').val(bmi);
+                }
+            }
+            $('#patientHeight, #patientWeight').on('input', calculateBmi);
+
+            // VAS Pain Gauge Click Handler
+            $('.vas-btn').on('click', function () {
+                const val = $(this).data('val');
+                $('#prescriptionVas').val(val);
+                $('#vasCurrentBadge').text('Score: ' + val + ' / 10');
+
+                $('.vas-btn').removeClass('border-3 border-dark shadow').addClass('opacity-75');
+                $(this).removeClass('opacity-75').addClass('border-3 border-dark shadow');
+            });
+
+            // Quick Diagnosis Selection from Dx Library
+            $('#quickDxSelect').on('change', function () {
+                const val = $(this).val();
+                if (!val) return;
+                const current = $('#prescriptionDxInput').val().trim();
+                if (current) {
+                    if (!current.includes(val)) {
+                        $('#prescriptionDxInput').val(current + ', ' + val);
+                    }
+                } else {
+                    $('#prescriptionDxInput').val(val);
+                }
+            });
+        });
+    </script>

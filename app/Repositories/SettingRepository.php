@@ -69,7 +69,8 @@ class SettingRepository extends BaseRepository
         $settingInputArray = Arr::only($input, [
             'app_name', 'company_name', 'hospital_email', 'hospital_phone', 'hospital_from_day', 'hospital_from_time',
             'hospital_address', 'current_currency', 'facebook_url', 'twitter_url', 'instagram_url', 'linkedIn_url', 'about_us', 'country_code', 'country_name','default_lang',
-            'open_ai_enable','open_ai_key','model_name','custom_sr_no_enable','custom_serial_prefix',
+            'open_ai_enable','open_ai_key','model_name','custom_sr_no_enable','custom_serial_prefix','referral_commission_percentage',
+            'clinic_name_bangla', 'clinic_name_eng', 'clinic_subtitle',
         ]);
 
         foreach ($settingInputArray as $key => $value) {
