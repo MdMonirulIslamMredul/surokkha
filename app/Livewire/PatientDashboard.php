@@ -6,6 +6,9 @@ use App\Models\Appointment;
 use App\Models\Bill;
 use App\Models\LiveConsultation;
 use App\Models\Module;
+use App\Models\PatientDiagnosisTest;
+use App\Models\Prescription;
+use App\Models\TestServiceBill;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\Lazy;
@@ -19,6 +22,9 @@ class PatientDashboard extends Component
     public $todayAppointment;
     public $totalMeeting;
     public $patientBill;
+    public $prescriptions;
+    public $testBills;
+    public $diagnosisTests;
 
     public function mount()
     {
@@ -28,6 +34,21 @@ class PatientDashboard extends Component
         $this->todayAppointment = Appointment::where('patient_id',$this->patientId)->whereBetween('opd_date',[Carbon::today()->startOfDay(),Carbon::today()->endOfDay()])->count();
         $this->totalMeeting = LiveConsultation::where('patient_id',$this->patientId)->count();
         $this->patientBill = Bill::wherePatientId($this->patientId)->where('status',1)->sum('amount');
+        $this->prescriptions = Prescription::with(['doctor.doctorUser', 'getMedicine.medicines'])
+            ->where('patient_id', $this->patientId)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+        $this->testBills = TestServiceBill::with(['doctor.doctorUser', 'items'])
+            ->where('patient_id', $this->patientId)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+        $this->diagnosisTests = PatientDiagnosisTest::with(['doctor.doctorUser', 'category'])
+            ->where('patient_id', $this->patientId)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
     }
 
     public function render()
