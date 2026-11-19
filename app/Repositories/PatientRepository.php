@@ -7,7 +7,9 @@ use App\Models\Department;
 use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\Receptionist;
+use App\Models\Referrer;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use App\Models\PatientAdmission;
 use Hash;
@@ -43,12 +45,19 @@ class PatientRepository extends BaseRepository
             $input['status'] = isset($input['status']) ? 1 : 0;
             $input['phone'] = preparePhoneNumber($input, 'phone');
             $input['department_id'] = Department::whereName('Patient')->first()->id;
-            $input['password'] = Hash::make($input['password']);
-            $input['language'] = $settings['default_lang'];
-            $input['dob'] = (! empty($input['dob'])) ? $input['dob'] : null;
+            $password = ! empty($input['password']) ? $input['password'] : '12345678';
+            $input['password'] = Hash::make($password);
+            $input['language'] = $settings['default_lang'] ?? 'en';
+            if (empty($input['dob']) && ! empty($input['age'])) {
+                $input['dob'] = Carbon::now()->subYears((int) $input['age'])->format('Y-m-d');
+            } else {
+                $input['dob'] = (! empty($input['dob'])) ? $input['dob'] : null;
+            }
+            $input['email_verified_at'] = Carbon::now();
+
             $user = User::create($input);
 
-            if ($mail) {
+            if ($mail && ! empty($input['email'])) {
                 $user->sendEmailVerificationNotification();
             }
 
@@ -63,7 +72,25 @@ class PatientRepository extends BaseRepository
                 }
             }
 
-            $patient = Patient::create(['user_id' => $user->id, 'patient_unique_id' => strtoupper(Patient::generateUniquePatientId()), 'custom_field' => !empty($jsonFields) ? $jsonFields : null]);
+            $referrerId = null;
+            if (! empty($input['refer_code'])) {
+                $referrer = Referrer::where('refer_code', trim($input['refer_code']))->first();
+                if ($referrer) {
+                    $referrerId = $referrer->id;
+                }
+            }
+
+            $patient = Patient::create([
+                'user_id' => $user->id,
+                'patient_unique_id' => strtoupper(Patient::generateUniquePatientId()),
+                'custom_field' => !empty($jsonFields) ? $jsonFields : null,
+                'age' => $input['age'] ?? null,
+                'height' => $input['height'] ?? null,
+                'weight' => $input['weight'] ?? null,
+                'bmi' => $input['bmi'] ?? null,
+                'occupation' => $input['occupation'] ?? null,
+                'referrer_id' => $referrerId,
+            ]);
 
             $ownerId = $patient->id;
             $ownerType = Patient::class;
@@ -103,7 +130,19 @@ class PatientRepository extends BaseRepository
 
             $input['custom_field'] = !empty($jsonFields) ? $jsonFields : null;
             $input['phone'] = preparePhoneNumber($input, 'phone');
-            $input['dob'] = (! empty($input['dob'])) ? $input['dob'] : null;
+            if (empty($input['dob']) && ! empty($input['age'])) {
+                $input['dob'] = Carbon::now()->subYears((int) $input['age'])->format('Y-m-d');
+            } else {
+                $input['dob'] = (! empty($input['dob'])) ? $input['dob'] : null;
+            }
+
+            if (! empty($input['refer_code'])) {
+                $referrer = Referrer::where('refer_code', trim($input['refer_code']))->first();
+                if ($referrer) {
+                    $input['referrer_id'] = $referrer->id;
+                }
+            }
+
             $patient->patientUser->update($input);
             $patient->update($input);
 

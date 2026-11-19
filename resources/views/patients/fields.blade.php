@@ -10,21 +10,57 @@
     <div class="col-md-6">
         <div class="form-group mb-5">
             {{ Form::label('last_name', __('messages.user.last_name') . ':', ['class' => 'form-label']) }}
-            <span class="required"></span>
-            {{ Form::text('last_name', null, ['class' => 'form-control', 'required', 'tabindex' => '2', 'placeholder' => __('messages.user.last_name')]) }}
+            {{ Form::text('last_name', null, ['class' => 'form-control', 'tabindex' => '2', 'placeholder' => __('messages.user.last_name')]) }}
         </div>
     </div>
     <div class="col-md-6">
         <div class="form-group mb-5">
-            {{ Form::label('email', __('messages.user.email') . ':', ['class' => 'form-label']) }}
-            <span class="required"></span>
-            {{ Form::text('email', null, ['class' => 'form-control', 'required', 'placeholder' => __('messages.user.email'), 'autocomplete' => 'off']) }}
+            {{ Form::label('email', __('messages.user.email') . ' (' . __('messages.common.optional') . '):', ['class' => 'form-label']) }}
+            {{ Form::text('email', null, ['class' => 'form-control', 'placeholder' => __('messages.user.email'), 'autocomplete' => 'off']) }}
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('age', 'Age:', ['class' => 'form-label']) }}
+            <span class="required"></span>
+            {{ Form::number('age', null, ['class' => 'form-control', 'required', 'id' => 'patientAge', 'min' => '0', 'max' => '150', 'placeholder' => 'Age in years']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="form-group mb-5">
             {{ Form::label('dob', __('messages.user.dob') . ':', ['class' => 'form-label']) }}
             {{ Form::text('dob', null, ['class' => getLoggedInUser()->thememode ? 'bg-light patientBirthDate form-control' : 'bg-white patientBirthDate form-control', 'id' => 'patientBirthDate', 'autocomplete' => 'off', 'tabindex' => '4', 'placeholder' => __('messages.user.dob')]) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('height', 'Height (cm):', ['class' => 'form-label']) }}
+            {{ Form::text('height', null, ['class' => 'form-control', 'id' => 'patientHeight', 'placeholder' => 'e.g. 170']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('weight', 'Weight (kg):', ['class' => 'form-label']) }}
+            {{ Form::text('weight', null, ['class' => 'form-control', 'id' => 'patientWeight', 'placeholder' => 'e.g. 68']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('bmi', 'BMI:', ['class' => 'form-label']) }}
+            {{ Form::text('bmi', null, ['class' => 'form-control bg-light', 'id' => 'patientBmi', 'readonly' => true, 'placeholder' => 'Auto-calculated']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('occupation', 'Occupation:', ['class' => 'form-label']) }}
+            {{ Form::text('occupation', null, ['class' => 'form-control', 'id' => 'patientOccupation', 'placeholder' => 'e.g. Teacher, Engineer']) }}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group mb-5">
+            {{ Form::label('refer_code', 'Referral Code (Optional):', ['class' => 'form-label']) }}
+            {{ Form::text('refer_code', null, ['class' => 'form-control text-uppercase', 'id' => 'patientReferCode', 'placeholder' => 'e.g. REF-ABC123']) }}
+            <span class="text-muted fs-small">Enter referral code if patient was referred.</span>
         </div>
     </div>
     <div class="col-md-6">
@@ -68,16 +104,14 @@
     </div>
     <div class="col-md-3">
         <div class="form-group mb-5">
-            {{ Form::label('password', __('messages.user.password') . ':', ['class' => 'form-label']) }}<span
-                class="required"></span>
-            {{ Form::password('password', ['class' => 'form-control', 'required', 'min' => '6', 'max' => '10', 'tabindex' => '10', 'placeholder' => __('messages.user.password'), 'autocomplete' => 'off']) }}
+            {{ Form::label('password', __('messages.user.password') . ' (Default: 12345678):', ['class' => 'form-label']) }}
+            <input type="password" name="password" class="form-control" id="patientPassword" minlength="6" maxlength="20" tabindex="10" value="12345678" placeholder="12345678" autocomplete="off">
         </div>
     </div>
     <div class="col-md-3">
         <div class="form-group mb-5">
             {{ Form::label('password_confirmation', __('messages.user.password_confirmation') . ':', ['class' => 'form-label']) }}
-            <span class="required"></span>
-            {{ Form::password('password_confirmation', ['class' => 'form-control', 'required', 'min' => '6', 'max' => '10', 'tabindex' => '11', 'placeholder' => __('messages.user.password_confirmation')]) }}
+            <input type="password" name="password_confirmation" class="form-control" id="patientPasswordConfirmation" minlength="6" maxlength="20" tabindex="11" value="12345678" placeholder="12345678">
         </div>
     </div>
     @if ($customField >= 0)
@@ -203,3 +237,28 @@
         {{ Form::submit(__('messages.common.save'), ['class' => 'btn btn-primary me-2', 'id' => 'patientSave']) }}
         <a href="{{ route('patients.index') }}" class="btn btn-secondary me-2">{!! __('messages.common.cancel') !!}</a>
     </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const heightInput = document.getElementById('patientHeight');
+        const weightInput = document.getElementById('patientWeight');
+        const bmiInput = document.getElementById('patientBmi');
+
+        function calculateBmi() {
+            if (!heightInput || !weightInput || !bmiInput) return;
+            const h = parseFloat(heightInput.value);
+            const w = parseFloat(weightInput.value);
+            if (h > 0 && w > 0) {
+                const heightInMeters = h > 3 ? h / 100 : h;
+                const bmi = (w / (heightInMeters * heightInMeters)).toFixed(2);
+                bmiInput.value = bmi;
+            } else {
+                bmiInput.value = '';
+            }
+        }
+
+        if (heightInput) heightInput.addEventListener('input', calculateBmi);
+        if (weightInput) weightInput.addEventListener('input', calculateBmi);
+    });
+</script>

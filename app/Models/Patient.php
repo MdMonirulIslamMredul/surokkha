@@ -61,7 +61,13 @@ class Patient extends Model
         'user_id',
         'patient_unique_id',
         'template_id',
-        'custom_field'
+        'custom_field',
+        'age',
+        'height',
+        'weight',
+        'bmi',
+        'occupation',
+        'referrer_id',
     ];
 
     const STATUS_ALL = 2;
@@ -90,12 +96,18 @@ class Patient extends Model
 
     public static $rules = [
         'first_name' => 'required|string',
-        'last_name' => 'required|string',
-        'email' => 'required|email:filter|unique:users,email',
-        'password' => 'required|same:password_confirmation|min:6',
+        'last_name' => 'nullable|string',
+        'phone' => 'required|unique:users,phone',
+        'email' => 'nullable|email:filter|unique:users,email',
+        'password' => 'nullable|same:password_confirmation|min:6',
         'gender' => 'required',
+        'age' => 'required|numeric|min:0',
         'dob' => 'nullable|date',
-        'phone' => 'nullable|numeric',
+        'height' => 'nullable|string',
+        'weight' => 'nullable|string',
+        'bmi' => 'nullable|numeric',
+        'occupation' => 'nullable|string',
+        'refer_code' => 'nullable|string',
         'address1' => 'nullable|string',
         'address2' => 'nullable|string',
         'city' => 'nullable|string',
@@ -199,5 +211,15 @@ class Patient extends Model
     public function idCardTemplate(): BelongsTo
     {
         return $this->belongsTo(PatientIdCardTemplate::class, 'template_id');
+    }
+
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(Referrer::class, 'referrer_id');
+    }
+
+    public function testServiceBills(): HasMany
+    {
+        return $this->hasMany(TestServiceBill::class, 'patient_id');
     }
 }

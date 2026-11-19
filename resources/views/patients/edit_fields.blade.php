@@ -10,21 +10,59 @@
     <div class="col-md-6">
         <div class="form-group mb-5">
             {{ Form::label('last_name', __('messages.user.last_name').':', ['class' => 'form-label']) }}
-            <span class="required"></span>
-            {{ Form::text('last_name', null, ['class' => 'form-control', 'required', 'tabindex' => '2','placeholder'=>__('messages.user.last_name')]) }}
+            {{ Form::text('last_name', null, ['class' => 'form-control', 'tabindex' => '2','placeholder'=>__('messages.user.last_name')]) }}
         </div>
     </div>
     <div class="col-md-6">
         <div class="form-group mb-5">
-            {{ Form::label('email', __('messages.user.email').':', ['class' => 'form-label']) }}
-            <span class="required"></span>
-            {{ Form::text('email', null, ['class' => 'form-control', 'required', 'tabindex' => '3','id'=>'editPatientEmail','placeholder'=>__('messages.user.email')]) }}
+            {{ Form::label('email', __('messages.user.email') . ' (' . __('messages.common.optional') . '):', ['class' => 'form-label']) }}
+            {{ Form::text('email', null, ['class' => 'form-control', 'tabindex' => '3','id'=>'editPatientEmail','placeholder'=>__('messages.user.email')]) }}
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('age', 'Age:', ['class' => 'form-label']) }}
+            <span class="required"></span>
+            {{ Form::number('age', $patient->age, ['class' => 'form-control', 'required', 'id' => 'editPatientAge', 'min' => '0', 'max' => '150', 'placeholder' => 'Age in years']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="form-group mb-5">
             {{ Form::label('dob', __('messages.user.dob').':', ['class' => 'form-label']) }}
             {{ Form::text('dob', null, ['class' => (getLoggedInUser()->thememode ? 'bg-light patientBirthDate form-control' : 'bg-white patientBirthDate form-control'), 'id' => 'editPatientBirthDate', 'autocomplete' => 'off', 'tabindex' => '4','placeholder'=>__('messages.user.dob')]) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('height', 'Height (cm):', ['class' => 'form-label']) }}
+            {{ Form::text('height', $patient->height, ['class' => 'form-control', 'id' => 'editPatientHeight', 'placeholder' => 'e.g. 170']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('weight', 'Weight (kg):', ['class' => 'form-label']) }}
+            {{ Form::text('weight', $patient->weight, ['class' => 'form-control', 'id' => 'editPatientWeight', 'placeholder' => 'e.g. 68']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('bmi', 'BMI:', ['class' => 'form-label']) }}
+            {{ Form::text('bmi', $patient->bmi, ['class' => 'form-control bg-light', 'id' => 'editPatientBmi', 'readonly' => true, 'placeholder' => 'Auto-calculated']) }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group mb-5">
+            {{ Form::label('occupation', 'Occupation:', ['class' => 'form-label']) }}
+            {{ Form::text('occupation', $patient->occupation, ['class' => 'form-control', 'id' => 'editPatientOccupation', 'placeholder' => 'e.g. Teacher, Engineer']) }}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group mb-5">
+            {{ Form::label('refer_code', 'Referral Code:', ['class' => 'form-label']) }}
+            {{ Form::text('refer_code', $patient->referrer->refer_code ?? null, ['class' => 'form-control text-uppercase', 'id' => 'editPatientReferCode', 'placeholder' => 'e.g. REF-ABC123']) }}
+            @if($patient->referrer)
+                <span class="badge bg-success mt-1">Bound to: {{ $patient->referrer->user->full_name ?? $patient->referrer->refer_code }} ({{ $patient->referrer->refer_code }})</span>
+            @endif
         </div>
     </div>
     <div class="col-md-6">
@@ -187,3 +225,28 @@
         <a href="{{ route('patients.index') }}"
            class="btn btn-secondary me-2">{!! __('messages.common.cancel') !!}</a>
     </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const heightInput = document.getElementById('editPatientHeight');
+        const weightInput = document.getElementById('editPatientWeight');
+        const bmiInput = document.getElementById('editPatientBmi');
+
+        function calculateBmi() {
+            if (!heightInput || !weightInput || !bmiInput) return;
+            const h = parseFloat(heightInput.value);
+            const w = parseFloat(weightInput.value);
+            if (h > 0 && w > 0) {
+                const heightInMeters = h > 3 ? h / 100 : h;
+                const bmi = (w / (heightInMeters * heightInMeters)).toFixed(2);
+                bmiInput.value = bmi;
+            } else {
+                bmiInput.value = '';
+            }
+        }
+
+        if (heightInput) heightInput.addEventListener('input', calculateBmi);
+        if (weightInput) weightInput.addEventListener('input', calculateBmi);
+    });
+</script>
